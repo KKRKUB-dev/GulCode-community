@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GulCode Community</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* Layout */
+        body, html { margin: 0; padding: 0; font-family: 'Kanit', sans-serif; background-color: #111827; color: #e5e7eb; height: 100dvh; width: 100%; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .glass-nav { background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(10px); border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        /* Scroll Area */
+        #main-scroll-area { position: absolute; top: 60px; bottom: 70px; left: 0; right: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 1; }
+
+        /* Animation */
+        .fade-in { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        /* Modal Transition */
+        .modal-bg { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="view-auth" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900 p-6 transition-opacity duration-300">
+        <div class="w-full max-w-sm bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gray-700 mb-4 text-3xl text-blue-500 shadow-lg">
+                    <i class="fa-solid fa-cube"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white">GulCode Community</h1>
+            </div>
+            <form class="space-y-4">
+                <input type="text" id="auth-username" class="w-full bg-gray-900 border border-gray-600 rounded-lg py-3 px-4 text-white focus:border-blue-500 outline-none" placeholder="ชื่อผู้ใช้">
+                <input type="password" id="auth-password" class="w-full bg-gray-900 border border-gray-600 rounded-lg py-3 px-4 text-white focus:border-blue-500 outline-none" placeholder="รหัสผ่าน (6+ ตัว)">
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="handleAuth('login')" class="flex-1 bg-gray-700 py-3 rounded-lg text-white active:scale-95 transition">เข้าสู่ระบบ</button>
+                    <button type="button" onclick="handleAuth('register')" class="flex-1 bg-blue-600 py-3 rounded-lg text-white shadow-lg shadow-blue-900/50 active:scale-95 transition">สมัครใหม่</button>
+                </div>
+            </form>
+            <p id="auth-error" class="text-center text-xs mt-4 min-h-[20px] text-red-400"></p>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header id="app-header" class="fixed top-0 left-0 right-0 h-[60px] bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 z-50 hidden">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('home')">
+            <i class="fa-solid fa-cube text-blue-500 text-xl"></i>
+            <h1 class="text-lg font-bold text-white">GulCode</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="text-right leading-tight">
+                <div id="header-username" class="text-sm font-medium text-white">User</div>
+                <div class="text-[10px] text-green-400">● Online</div>
+            </div>
+            <button onclick="logout()" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-400"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-scroll-area" class="hidden">
+        <div class="max-w-3xl mx-auto min-h-full">
+            
+            <!-- VIEW: HOME -->
+            <div id="view-home" class="p-4 pb-8">
+                <div class="sticky top-0 bg-gray-900 z-20 pb-2 pt-1">
+                    <div class="relative mb-3">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-500"></i>
+                        <input type="text" id="search-input" placeholder="ค้นหา..." class="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-full py-2.5 pl-10 pr-4 focus:border-blue-500 outline-none">
+                    </div>
+                    <div class="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                        <button onclick="filterProjects('All')" class="cat-btn active shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium shadow-md" data-cat="All">ทั้งหมด</button>
+                        <button onclick="filterProjects('Web')" class="cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs" data-cat="Web">Web</button>
+                        <button onclick="filterProjects('App')" class="cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs" data-cat="App">App</button>
+                        <button onclick="filterProjects('Game')" class="cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs" data-cat="Game">Game</button>
+                    </div>
+                </div>
+                <div id="project-list" class="space-y-3 mt-2">
+                    <div class="text-center py-12 text-gray-500"><i class="fa-solid fa-circle-notch fa-spin text-2xl mb-3"></i><p>Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- VIEW: ADD / EDIT -->
+            <div id="view-add" class="hidden p-4 h-full flex flex-col bg-gray-900">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
+                    <h2 id="form-title" class="font-bold text-gray-200"><i class="fa-solid fa-pen-to-square mr-2 text-blue-500"></i>สร้างงานใหม่</h2>
+                    <button onclick="resetForm()" class="text-xs text-gray-500 hover:text-white">ล้างค่า</button>
+                </div>
+                
+                <div class="space-y-3 flex-1 flex flex-col">
+                    <input type="text" id="p-title" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 outline-none" placeholder="ชื่อโปรเจกต์">
+                    <div class="flex gap-2">
+                        <select id="p-category" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-gray-300 outline-none w-1/3">
+                            <option value="Web">Web</option>
+                            <option value="App">App</option>
+                            <option value="Game">Game</option>
+                        </select>
+                        <input type="text" id="p-desc" class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white w-2/3 outline-none" placeholder="คำอธิบาย">
+                    </div>
+
+                    <div class="flex-1 relative border border-gray-700 rounded-lg overflow-hidden bg-[#1e1e1e] min-h-[300px]">
+                        <!-- FIX: Added z-10 for button visibility -->
+                        <div class="absolute top-0 left-0 right-0 bg-[#252526] border-b border-[#333] px-3 py-2 flex justify-between text-xs text-gray-400 z-10">
+                            <span><i class="fa-brands fa-html5 text-orange-500 mr-1"></i> EDITOR</span>
+                            <!-- ปุ่มเปิด Modal Template -->
+                            <button onclick="openTemplateModal()" class="text-blue-400 hover:text-blue-300 font-bold bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/30 transition">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>โหลด Template
+                            </button>
+                        </div>
+                        <!-- FIX: Changed pt-10 to pt-12 for safe margin -->
+                        <textarea id="p-code" class="w-full h-full pt-12 p-3 bg-[#1e1e1e] text-gray-300 font-mono text-sm resize-none focus:outline-none" spellcheck="false" placeholder="<!-- ใส่โค้ดของคุณ หรือกด 'โหลด Template' ด้านบน -->"></textarea>
+                    </div>
+                    <button onclick="saveProject()" id="btn-save" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> เผยแพร่
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW: PROFILE -->
+            <div id="view-profile" class="hidden p-6 flex flex-col items-center justify-center h-full">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-3xl text-white mb-3 shadow-xl"><i class="fa-solid fa-user-astronaut"></i></div>
+                <h2 id="profile-name" class="text-xl font-bold text-white">User</h2>
+                <div class="flex gap-4 mt-6 w-full max-w-xs">
+                    <div class="flex-1 bg-gray-800 rounded-lg p-3 text-center border border-gray-700">
+                        <div class="text-gray-400 text-xs mb-1">งานทั้งหมด</div>
+                        <div id="stats-count" class="font-bold text-blue-400 text-xl">0</div>
+                    </div>
+                    <div class="flex-1 bg-gray-800 rounded-lg p-3 text-center border border-gray-700">
+                        <div class="text-gray-400 text-xs mb-1">สถานะ</div>
+                        <div class="text-green-400 text-sm font-bold mt-1">Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav id="app-nav" class="fixed bottom-0 left-0 right-0 h-[70px] glass-nav z-50 flex justify-around items-center pb-2 hidden">
+        <button onclick="switchView('home')" class="nav-btn active w-1/3 flex flex-col items-center justify-center py-2 text-blue-500"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px]">หน้าแรก</span></button>
+        <button onclick="openAddMode()" class="nav-btn w-1/3 flex flex-col items-center justify-center py-2 text-gray-500 relative">
+            <div class="absolute -top-5 bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-gray-900 active:scale-90 transition"><i class="fa-solid fa-plus text-xl"></i></div>
+            <span class="text-[10px] mt-6">ลงงาน</span>
+        </button>
+        <button onclick="switchView('profile')" class="nav-btn w-1/3 flex flex-col items-center justify-center py-2 text-gray-500"><i class="fa-solid fa-user text-xl mb-1"></i><span class="text-[10px]">โปรไฟล์</span></button>
+    </nav>
+
+    <!-- DELETE MODAL -->
+    <div id="modal-delete" class="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center hidden fade-in">
+        <div class="bg-gray-800 p-6 rounded-2xl w-[80%] max-w-xs text-center border border-gray-700">
+            <div class="w-12 h-12 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-xl"><i class="fa-solid fa-trash"></i></div>
+            <h3 class="text-white font-bold text-lg mb-2">ยืนยันการลบ?</h3>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeDeleteModal()" class="flex-1 py-2 bg-gray-700 text-white rounded-lg">ยกเลิก</button>
+                <button onclick="confirmDelete()" class="flex-1 py-2 bg-red-600 text-white rounded-lg">ลบเลย</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATE SELECTOR MODAL -->
+    <div id="modal-template" class="fixed inset-0 z-[90] bg-black/90 flex items-end sm:items-center justify-center hidden transition-opacity duration-300 opacity-0 pointer-events-none modal-bg">
+        <div class="bg-gray-800 w-full sm:w-[400px] rounded-t-2xl sm:rounded-2xl p-6 border-t sm:border border-gray-700 transform translate-y-full sm:translate-y-0 transition-transform duration-300 modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-white font-bold text-lg"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>เลือก Template</h3>
+                <button onclick="closeTemplateModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            
+            <div class="space-y-3">
+                <!-- Template 1 -->
+                <div onclick="selectTemplate(1)" class="bg-gray-700 p-4 rounded-xl border border-gray-600 hover:border-blue-500 hover:bg-gray-600 cursor-pointer flex items-center gap-4 transition group">
+                    <div class="w-12 h-12 rounded-lg bg-purple-900/50 flex items-center justify-center text-purple-400 group-hover:text-white group-hover:bg-purple-600 transition">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold text-sm">Neon Button</h4>
+                        <p class="text-xs text-gray-400">ปุ่มกดเรืองแสงแบบ Cyberpunk</p>
+                    </div>
+                </div>
+
+                <!-- Template 2 -->
+                <div onclick="selectTemplate(2)" class="bg-gray-700 p-4 rounded-xl border border-gray-600 hover:border-blue-500 hover:bg-gray-600 cursor-pointer flex items-center gap-4 transition group">
+                    <div class="w-12 h-12 rounded-lg bg-green-900/50 flex items-center justify-center text-green-400 group-hover:text-white group-hover:bg-green-600 transition">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold text-sm">Digital Clock</h4>
+                        <p class="text-xs text-gray-400">นาฬิกาไล่สีพื้นหลังสุดเท่</p>
+                    </div>
+                </div>
+
+                <!-- Template 3 -->
+                <div onclick="selectTemplate(3)" class="bg-gray-700 p-4 rounded-xl border border-gray-600 hover:border-blue-500 hover:bg-gray-600 cursor-pointer flex items-center gap-4 transition group">
+                    <div class="w-12 h-12 rounded-lg bg-blue-900/50 flex items-center justify-center text-blue-400 group-hover:text-white group-hover:bg-blue-600 transition">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-bold text-sm">Glass Card</h4>
+                        <p class="text-xs text-gray-400">การ์ดกระจกใส เปลี่ยนสีได้</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-center text-[10px] text-gray-500 mt-4">เลือกเพื่อนำโค้ดไปวางใน Editor</p>
+        </div>
+    </div>
+
+    <!-- DETAIL OVERLAY -->
+    <div id="view-detail" class="fixed inset-0 bg-gray-900 z-[60] flex flex-col hidden">
+        <div class="flex justify-between items-center p-3 border-b border-gray-800 h-[60px]">
+            <button onclick="closeDetail()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+            <div class="text-center"><h2 id="d-title" class="font-bold text-white text-sm">Title</h2></div>
+            <button onclick="copyCode()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-blue-400"><i class="fa-regular fa-copy text-lg"></i></button>
+        </div>
+        <div class="flex h-[40px] border-b border-gray-800 bg-gray-900 text-sm">
+            <button onclick="switchDetailTab('preview')" id="tab-preview" class="flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50">Play</button>
+            <button onclick="switchDetailTab('code')" id="tab-code" class="flex-1 text-gray-500">Code</button>
+        </div>
+        <div class="flex-1 relative bg-black">
+            <div id="content-preview" class="absolute inset-0 w-full h-full bg-white"><iframe id="preview-frame" class="w-full h-full border-none"></iframe></div>
+            <div id="content-code" class="absolute inset-0 w-full h-full bg-[#1e1e1e] overflow-auto hidden p-4"><pre><code id="code-display" class="font-mono text-sm text-blue-300 whitespace-pre-wrap"></code></pre></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-600 text-white px-6 py-3 rounded-full shadow-2xl z-[200] flex items-center gap-3 transition-all duration-300 opacity-0 pointer-events-none">
+        <i class="fa-solid fa-circle-check text-green-400"></i><span id="toast-msg">Success</span>
+    </div>
+
+    <!-- JS Logic -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
+        // Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCO0XsFGLW7EiQ1XQA4haJBOpxhcjA9cCo",
+            authDomain: "kkr-gulcode-community.firebaseapp.com",
+            projectId: "kkr-gulcode-community",
+            storageBucket: "kkr-gulcode-community.firebasestorage.app",
+            messagingSenderId: "533732629666",
+            appId: "1:533732629666:web:5da28cf53b6051f8048bfb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const DOMAIN_SUFFIX = "@gulcode.community";
+
+        let currentUser = null;
+        let allProjects = [];
+        let currentCategory = 'All';
+        let editingId = null;
+        let deletingId = null;
+
+        // --- TEMPLATE DATA ---
+        // Note: Used alert() in template 1 for simplicity and effect, as it runs inside an iframe.
+        const templates = {
+            1: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f0c29; font-family: sans-serif; margin: 0; }
+  button {
+    padding: 20px 40px; font-size: 24px; color: #03e9f4; text-transform: uppercase; text-decoration: none; letter-spacing: 4px;
+    background: transparent; border: 2px solid #03e9f4; border-radius: 5px; box-shadow: 0 0 10px #03e9f4; transition: 0.5s; cursor: pointer; position: relative; overflow: hidden;
+  }
+  button:hover { background: #03e9f4; color: #050801; box-shadow: 0 0 50px #03e9f4, 0 0 200px #03e9f4; }
+</style>
+</head>
+<body>
+  <button onclick="alert('BOOM! Neon Power!')">NEON CLICK</button>
+</body>
+</html>`,
+            2: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #111; font-family: 'Courier New', monospace; }
+  .clock { 
+    font-size: 60px; font-weight: bold; 
+    background: linear-gradient(45deg, #ff00cc, #3333ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0px 0px 20px rgba(255, 0, 204, 0.3);
+  }
+</style>
+</head>
+<body>
+  <div class="clock" id="time">00:00:00</div>
+  <script>
+    setInterval(() => {
+      const now = new Date();
+      // Format time safely without alert() or external libraries
+      document.getElementById('time').innerText = now.toLocaleTimeString('en-US', { hour12: false });
+    }, 1000);
+  <\/script>
+</body>
+</html>`,
+            3: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(to right, #4facfe, #00f2fe); margin: 0; font-family: sans-serif; }
+  .card {
+    background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; width: 250px; text-align: center;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18); transition: 0.3s;
+  }
+  .card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.4); }
+  h2 { color: white; margin-bottom: 10px; }
+  p { color: #eee; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h2>Glass Card</h2>
+    <p>Hover over me to see the magic effect!</p>
+  </div>
+</body>
+</html>`
+        };
+
+        // --- TEMPLATE FUNCTIONS ---
+        window.openTemplateModal = () => {
+            const modal = document.getElementById('modal-template');
+            const content = modal.querySelector('.modal-content');
+            modal.classList.remove('hidden');
+            // Animation timeout
+            setTimeout(() => {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                content.classList.remove('translate-y-full');
+            }, 10);
+        };
+
+        window.closeTemplateModal = () => {
+            const modal = document.getElementById('modal-template');
+            const content = modal.querySelector('.modal-content');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.add('translate-y-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        window.selectTemplate = (id) => {
+            document.getElementById('p-code').value = templates[id];
+            closeTemplateModal();
+            showToast("โหลด Template เรียบร้อย!");
+        };
+
+        // --- AUTH ---
+        window.handleAuth = async (mode) => {
+            const u = document.getElementById('auth-username').value.trim();
+            const p = document.getElementById('auth-password').value;
+            const err = document.getElementById('auth-error');
+            if(u.length < 3 || p.length < 6) { err.innerText = "ชื่อ 3+ ตัว / รหัส 6+ ตัว"; return; }
+            const email = u.toLowerCase().replace(/\s/g, '') + DOMAIN_SUFFIX;
+            err.innerText = "กำลังโหลด...";
+            try {
+                if(mode === 'register') {
+                    const cred = await createUserWithEmailAndPassword(auth, email, p);
+                    await updateProfile(cred.user, { displayName: u });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, p);
+                }
+            } catch(e) { err.innerText = "เกิดข้อผิดพลาด"; console.error(e); }
+        };
+        window.logout = () => signOut(auth).then(() => location.reload());
+        onAuthStateChanged(auth, user => {
+            if(user) {
+                currentUser = user;
+                document.getElementById('view-auth').classList.add('hidden');
+                document.getElementById('app-header').classList.remove('hidden');
+                document.getElementById('app-nav').classList.remove('hidden');
+                document.getElementById('main-scroll-area').classList.remove('hidden');
+                document.getElementById('header-username').innerText = user.displayName;
+                document.getElementById('profile-name').innerText = user.displayName;
+                setupDB();
+                showToast("ยินดีต้อนรับ!");
+            } else { document.getElementById('view-auth').classList.remove('hidden'); }
+        });
+
+        // --- DB & RENDER ---
+        function setupDB() {
+            const q = query(collection(db, 'projects'));
+            onSnapshot(q, snapshot => {
+                allProjects = [];
+                let myCount = 0;
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    allProjects.push({ id: doc.id, ...d });
+                    if(d.authorId === currentUser.uid) myCount++;
+                });
+                document.getElementById('stats-count').innerText = myCount;
+                allProjects.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                renderProjects();
+            });
+        }
+
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => renderProjects(e.target.value.trim()));
+
+        function renderProjects(searchTerm = "") {
+            const list = document.getElementById('project-list');
+            list.innerHTML = '';
+            let filtered = currentCategory === 'All' ? allProjects : allProjects.filter(p => p.category === currentCategory);
+            if (searchTerm) {
+                const lowerTerm = searchTerm.toLowerCase();
+                filtered = filtered.filter(p => p.title.toLowerCase().includes(lowerTerm) || p.authorName.toLowerCase().includes(lowerTerm));
+            }
+            if(filtered.length === 0) { list.innerHTML = '<div class="text-center text-gray-600 py-10 text-sm">ไม่พบข้อมูล</div>'; return; }
+
+            filtered.forEach(p => {
+                const isOwner = currentUser && p.authorId === currentUser.uid;
+                let icon = 'fa-code'; let col = 'text-blue-400 bg-blue-900/20';
+                if(p.category === 'Game') { icon = 'fa-gamepad'; col = 'text-purple-400 bg-purple-900/20'; }
+                if(p.category === 'App') { icon = 'fa-mobile-screen'; col = 'text-green-400 bg-green-900/20'; }
+                let manageBtns = isOwner ? `
+                    <div class="flex gap-2 ml-3 pl-3 border-l border-gray-700">
+                        <button onclick="event.stopPropagation(); editProject('${p.id}')" class="w-8 h-8 rounded-lg bg-gray-700 text-gray-400 hover:text-white hover:bg-gray-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="event.stopPropagation(); promptDelete('${p.id}')" class="w-8 h-8 rounded-lg bg-gray-700 text-gray-400 hover:text-red-400 hover:bg-gray-600 flex items-center justify-center transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>` : '';
+
+                const html = `
+                <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-gray-600 active:scale-[0.99] transition-all cursor-pointer shadow-sm flex items-center justify-between group">
+                    <div class="flex items-center gap-3 overflow-hidden flex-1">
+                        <div class="w-10 h-10 rounded-lg ${col} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${icon}"></i></div>
+                        <div class="min-w-0">
+                            <h3 class="font-bold text-gray-200 text-sm truncate">${escapeHtml(p.title)}</h3>
+                            <p class="text-[10px] text-gray-500 truncate flex items-center gap-1"><i class="fa-regular fa-user"></i> ${escapeHtml(p.authorName)}</p>
+                        </div>
+                    </div>
+                    ${manageBtns}
+                </div>`;
+                list.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // --- EDIT / ADD / DELETE ---
+        window.openAddMode = () => {
+            editingId = null; resetForm();
+            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-pen-to-square mr-2 text-blue-500"></i>สร้างงานใหม่';
+            document.getElementById('btn-save').innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> เผยแพร่';
+            document.getElementById('btn-save').className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2";
+            switchView('add');
+        };
+        window.editProject = (id) => {
+            const p = allProjects.find(proj => proj.id === id);
+            if(!p) return;
+            editingId = id;
+            document.getElementById('p-title').value = p.title;
+            document.getElementById('p-desc').value = p.description || '';
+            document.getElementById('p-code').value = p.code;
+            document.getElementById('p-category').value = p.category;
+            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-wrench mr-2 text-yellow-500"></i>แก้ไขงาน';
+            document.getElementById('btn-save').innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> บันทึกการแก้ไข';
+            document.getElementById('btn-save').className = "w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2";
+            switchView('add');
+        };
+        window.saveProject = async () => {
+            const t = document.getElementById('p-title').value.trim();
+            const d = document.getElementById('p-desc').value.trim();
+            const c = document.getElementById('p-code').value;
+            const cat = document.getElementById('p-category').value;
+            if(!t || !c) return showToast("ใส่ข้อมูลให้ครบ", true);
+            const btn = document.getElementById('btn-save'); const oldText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...'; btn.disabled = true;
+            try {
+                if(editingId) { await updateDoc(doc(db, 'projects', editingId), { title: t, description: d, code: c, category: cat, isEdited: true }); showToast("แก้ไขสำเร็จ!"); } 
+                else { await addDoc(collection(db, 'projects'), { title: t, description: d, code: c, category: cat, authorId: currentUser.uid, authorName: currentUser.displayName, timestamp: serverTimestamp(), likes: 0 }); showToast("เผยแพร่สำเร็จ!"); }
+                switchView('home');
+            } catch(e) { console.error(e); showToast("เกิดข้อผิดพลาด", true); } finally { btn.innerHTML = oldText; btn.disabled = false; }
+        };
+        window.promptDelete = (id) => { deletingId = id; document.getElementById('modal-delete').classList.remove('hidden'); };
+        window.closeDeleteModal = () => { document.getElementById('modal-delete').classList.add('hidden'); deletingId = null; };
+        window.confirmDelete = async () => { if(!deletingId) return; try { await deleteDoc(doc(db, 'projects', deletingId)); showToast("ลบโปรเจกต์แล้ว"); } catch(e) { console.error(e); showToast("ลบไม่สำเร็จ", true); } closeDeleteModal(); };
+
+        // --- UTILS ---
+        window.resetForm = () => { document.getElementById('p-title').value = ''; document.getElementById('p-desc').value = ''; document.getElementById('p-code').value = ''; };
+        window.switchView = (v) => {
+            ['home', 'add', 'profile'].forEach(id => document.getElementById('view-'+id).classList.add('hidden'));
+            document.getElementById('view-'+v).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-blue-500'); b.classList.add('text-gray-500'); });
+            if(v==='home') document.querySelectorAll('.nav-btn')[0].classList.add('text-blue-500');
+            if(v==='profile') document.querySelectorAll('.nav-btn')[2].classList.add('text-blue-500');
+        };
+        window.filterProjects = (c) => {
+            currentCategory = c;
+            document.querySelectorAll('.cat-btn').forEach(b => { b.className = b.dataset.cat === c ? "cat-btn active shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium shadow-md" : "cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs"; });
+            renderProjects(document.getElementById('search-input').value.trim());
+        };
+        window.openDetail = (p) => { document.getElementById('d-title').innerText = p.title; document.getElementById('code-display').innerText = p.code; document.getElementById('preview-frame').srcdoc = p.code; document.getElementById('view-detail').classList.remove('hidden'); switchDetailTab('preview'); };
+        window.closeDetail = () => { document.getElementById('view-detail').classList.add('hidden'); document.getElementById('preview-frame').srcdoc = ''; };
+        window.switchDetailTab = (t) => {
+            if(t==='preview') { document.getElementById('content-preview').classList.remove('hidden'); document.getElementById('content-code').classList.add('hidden'); document.getElementById('tab-preview').className = "flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50"; document.getElementById('tab-code').className = "flex-1 text-gray-500"; } 
+            else { document.getElementById('content-preview').classList.add('hidden'); document.getElementById('content-code').classList.remove('hidden'); document.getElementById('tab-code').className = "flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50"; document.getElementById('tab-preview').className = "flex-1 text-gray-500"; }
+        };
+        window.copyCode = () => { navigator.clipboard.writeText(document.getElementById('code-display').innerText); showToast("Copied!"); };
+        window.showToast = (m, err=false) => { const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = m; t.querySelector('i').className = err ? "fa-solid fa-circle-exclamation text-red-400" : "fa-solid fa-circle-check text-green-400"; t.classList.remove('opacity-0'); setTimeout(()=>t.classList.add('opacity-0'), 2000); };
+        function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
+    </script>
+</body>
+</html>
