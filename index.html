@@ -12,10 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=JetBrains+Mono:wght==400;500&display=swap" rel="stylesheet">
 
     <style>
-        /* Layout */
+        /* Layout & Theme (Original) */
         body, html { margin: 0; padding: 0; font-family: 'Kanit', sans-serif; background-color: #111827; color: #e5e7eb; height: 100dvh; width: 100%; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -24,13 +24,19 @@
         /* Scroll Area */
         #main-scroll-area { position: absolute; top: 60px; bottom: 70px; left: 0; right: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 1; }
 
-        /* Animation */
+        /* Animations */
         .fade-in { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        /* Modal Transition */
-        .modal-bg { transition: opacity 0.3s ease; }
-        .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .heart-pop { animation: heartBeat 0.5s ease-in-out; }
+        @keyframes heartBeat { 0%, 28%, 70% { transform: scale(1); } 14%, 42% { transform: scale(1.3); } }
+
+        /* Custom File Tabs (Original) */
+        .file-tab { @apply px-3 py-2 text-xs font-mono cursor-pointer border-r border-gray-700 bg-[#2d2d2d] text-gray-400 hover:text-gray-200 transition whitespace-nowrap flex items-center gap-2; }
+        .file-tab.active { @apply bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-500; }
+        .file-icon-html { color: #e34c26; }
+        .file-icon-css { color: #264de4; }
+        .file-icon-js { color: #f0db4f; }
     </style>
 </head>
 <body>
@@ -60,7 +66,7 @@
     <header id="app-header" class="fixed top-0 left-0 right-0 h-[60px] bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 z-50 hidden">
         <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('home')">
             <i class="fa-solid fa-cube text-blue-500 text-xl"></i>
-            <h1 class="text-lg font-bold text-white">GulCode</h1>
+            <h1 class="text-lg font-bold text-white">GulCode v2.0</h1>
         </div>
         <div class="flex items-center gap-3">
             <div class="text-right leading-tight">
@@ -73,75 +79,94 @@
 
     <!-- MAIN CONTENT -->
     <main id="main-scroll-area" class="hidden">
-        <div class="max-w-3xl mx-auto min-h-full">
+        <div class="max-w-3xl mx-auto min-h-full pb-4">
             
-            <!-- VIEW: HOME -->
-            <div id="view-home" class="p-4 pb-8">
+            <!-- VIEW: HOME (PROJECTS) -->
+            <div id="view-home" class="p-4">
                 <div class="sticky top-0 bg-gray-900 z-20 pb-2 pt-1">
                     <div class="relative mb-3">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-500"></i>
-                        <input type="text" id="search-input" placeholder="ค้นหา..." class="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-full py-2.5 pl-10 pr-4 focus:border-blue-500 outline-none">
+                        <input type="text" id="search-input" placeholder="ค้นหาโปรเจกต์..." class="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-full py-2.5 pl-10 pr-4 focus:border-blue-500 outline-none">
                     </div>
                     <div class="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
                         <button onclick="filterProjects('All')" class="cat-btn active shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium shadow-md" data-cat="All">ทั้งหมด</button>
+                        <button onclick="filterProjects('Popular')" class="cat-btn shrink-0 bg-gray-800 text-red-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs font-bold" data-cat="Popular"><i class="fa-solid fa-fire mr-1"></i>ยอดฮิต</button>
                         <button onclick="filterProjects('Web')" class="cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs" data-cat="Web">Web</button>
                         <button onclick="filterProjects('App')" class="cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs" data-cat="App">App</button>
                         <button onclick="filterProjects('Game')" class="cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs" data-cat="Game">Game</button>
                     </div>
                 </div>
-                <div id="project-list" class="space-y-3 mt-2">
-                    <div class="text-center py-12 text-gray-500"><i class="fa-solid fa-circle-notch fa-spin text-2xl mb-3"></i><p>Loading...</p></div>
-                </div>
+                <div id="project-list" class="space-y-3 mt-2"></div>
             </div>
 
-            <!-- VIEW: ADD / EDIT -->
-            <div id="view-add" class="hidden p-4 h-full flex flex-col bg-gray-900">
-                <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-3">
-                    <h2 id="form-title" class="font-bold text-gray-200"><i class="fa-solid fa-pen-to-square mr-2 text-blue-500"></i>สร้างงานใหม่</h2>
-                    <button onclick="resetForm()" class="text-xs text-gray-500 hover:text-white">ล้างค่า</button>
-                </div>
-                
-                <div class="space-y-3 flex-1 flex flex-col">
-                    <input type="text" id="p-title" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 outline-none" placeholder="ชื่อโปรเจกต์">
-                    <div class="flex gap-2">
-                        <select id="p-category" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-gray-300 outline-none w-1/3">
-                            <option value="Web">Web</option>
-                            <option value="App">App</option>
-                            <option value="Game">Game</option>
-                        </select>
-                        <input type="text" id="p-desc" class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white w-2/3 outline-none" placeholder="คำอธิบาย">
-                    </div>
-
-                    <div class="flex-1 relative border border-gray-700 rounded-lg overflow-hidden bg-[#1e1e1e] min-h-[300px]">
-                        <!-- FIX: Added z-10 for button visibility -->
-                        <div class="absolute top-0 left-0 right-0 bg-[#252526] border-b border-[#333] px-3 py-2 flex justify-between text-xs text-gray-400 z-10">
-                            <span><i class="fa-brands fa-html5 text-orange-500 mr-1"></i> EDITOR</span>
-                            <!-- ปุ่มเปิด Modal Template -->
-                            <button onclick="openTemplateModal()" class="text-blue-400 hover:text-blue-300 font-bold bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/30 transition">
-                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>โหลด Template
-                            </button>
+            <!-- VIEW: FEED (SOCIAL) -->
+            <div id="view-feed" class="hidden p-4">
+                <div class="sticky top-0 bg-gray-900 z-20 pb-3 pt-1 flex flex-col border-b border-gray-800 mb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-white"><i class="fa-solid fa-hashtag text-blue-500 mr-2"></i>ชุมชน</h2>
+                        <div class="flex bg-gray-800 rounded-lg p-1">
+                            <button onclick="setFeedFilter('latest')" id="feed-filter-latest" class="px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white transition">ล่าสุด</button>
+                            <button onclick="setFeedFilter('popular')" id="feed-filter-popular" class="px-3 py-1 rounded text-xs font-bold text-gray-400 hover:text-white transition"><i class="fa-solid fa-heart text-red-500 mr-1"></i>ฮิต</button>
                         </div>
-                        <!-- FIX: Changed pt-10 to pt-12 for safe margin -->
-                        <textarea id="p-code" class="w-full h-full pt-12 p-3 bg-[#1e1e1e] text-gray-300 font-mono text-sm resize-none focus:outline-none" spellcheck="false" placeholder="<!-- ใส่โค้ดของคุณ หรือกด 'โหลด Template' ด้านบน -->"></textarea>
                     </div>
-                    <button onclick="saveProject()" id="btn-save" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2">
-                        <i class="fa-solid fa-paper-plane mr-2"></i> เผยแพร่
-                    </button>
+                    
+                    <div onclick="openPostModal(null)" class="bg-gray-800 p-4 rounded-xl border border-gray-700 active:bg-gray-700/50 cursor-pointer transition">
+                        <p class="text-gray-400 text-sm"><i class="fa-solid fa-camera mr-2"></i> คุณอยากจะโพสต์อะไร?</p>
+                    </div>
                 </div>
+                <div id="feed-list" class="space-y-6"></div>
             </div>
 
+            <!-- VIEW: ADD (PROJECT CREATE/EDIT) -->
+            <div id="view-add" class="hidden p-4 h-full flex flex-col bg-gray-900">
+                <div id="form-project" class="flex-1 flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="font-bold text-gray-200 text-sm">รายละเอียดงาน</h2>
+                        <button onclick="resetForm()" class="text-xs text-gray-500 hover:text-white">ล้างค่า</button>
+                    </div>
+                    <div class="space-y-3 flex-1 flex flex-col">
+                        <input type="text" id="p-title" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" placeholder="ชื่อโปรเจกต์">
+                        <div class="flex gap-2">
+                            <select id="p-category" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-300 outline-none w-1/3 text-xs">
+                                <option value="Web">Web</option>
+                                <option value="App">App</option>
+                                <option value="Game">Game</option>
+                            </select>
+                            <input type="text" id="p-desc" class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white w-2/3 outline-none text-sm" placeholder="คำอธิบาย">
+                        </div>
+                        <!-- Editor Mode -->
+                        <div class="flex bg-gray-800 p-1 rounded-lg">
+                            <button onclick="setEditorMode('normal')" id="btn-mode-normal" class="flex-1 py-1.5 rounded-md text-xs font-bold bg-blue-600 text-white shadow transition">Basic</button>
+                            <button onclick="setEditorMode('advanced')" id="btn-mode-advanced" class="flex-1 py-1.5 rounded-md text-xs font-bold text-gray-400 hover:text-white transition">🚀 Advanced</button>
+                        </div>
+                        <!-- EDITOR -->
+                        <div class="flex-1 relative border border-gray-700 rounded-lg overflow-hidden bg-[#1e1e1e] min-h-[300px] flex flex-col">
+                            <div id="editor-top-bar" class="bg-[#252526] border-b border-[#333] flex items-center pr-2 hidden">
+                                <div id="file-tabs-container" class="flex overflow-x-auto hide-scrollbar flex-1"></div>
+                                <button onclick="openNewFileModal()" class="px-3 py-2 text-gray-400 hover:text-white border-l border-[#333]"><i class="fa-solid fa-plus"></i></button>
+                                <button onclick="openEditorMenu()" class="px-3 py-2 text-gray-400 hover:text-white border-l border-[#333]"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            </div>
+                            <div class="relative flex-1">
+                                <textarea id="code-editor" class="absolute inset-0 w-full h-full p-3 bg-[#1e1e1e] text-gray-300 font-mono text-sm resize-none focus:outline-none" spellcheck="false" placeholder="// Code here..."></textarea>
+                            </div>
+                        </div>
+                        <button onclick="saveProject()" id="btn-save-project" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2 text-sm"><i class="fa-solid fa-paper-plane mr-2"></i> ลงงาน</button>
+                    </div>
+                </div>
+            </div>
+            
             <!-- VIEW: PROFILE -->
             <div id="view-profile" class="hidden p-6 flex flex-col items-center justify-center h-full">
                 <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-3xl text-white mb-3 shadow-xl"><i class="fa-solid fa-user-astronaut"></i></div>
                 <h2 id="profile-name" class="text-xl font-bold text-white">User</h2>
                 <div class="flex gap-4 mt-6 w-full max-w-xs">
                     <div class="flex-1 bg-gray-800 rounded-lg p-3 text-center border border-gray-700">
-                        <div class="text-gray-400 text-xs mb-1">งานทั้งหมด</div>
-                        <div id="stats-count" class="font-bold text-blue-400 text-xl">0</div>
+                        <div class="text-gray-400 text-xs mb-1">โปรเจกต์</div>
+                        <div id="stats-projects" class="font-bold text-blue-400 text-xl">0</div>
                     </div>
                     <div class="flex-1 bg-gray-800 rounded-lg p-3 text-center border border-gray-700">
-                        <div class="text-gray-400 text-xs mb-1">สถานะ</div>
-                        <div class="text-green-400 text-sm font-bold mt-1">Active</div>
+                        <div class="text-gray-400 text-xs mb-1">โพสต์</div>
+                        <div id="stats-posts" class="font-bold text-green-400 text-xl">0</div>
                     </div>
                 </div>
             </div>
@@ -150,16 +175,100 @@
 
     <!-- BOTTOM NAV -->
     <nav id="app-nav" class="fixed bottom-0 left-0 right-0 h-[70px] glass-nav z-50 flex justify-around items-center pb-2 hidden">
-        <button onclick="switchView('home')" class="nav-btn active w-1/3 flex flex-col items-center justify-center py-2 text-blue-500"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px]">หน้าแรก</span></button>
-        <button onclick="openAddMode()" class="nav-btn w-1/3 flex flex-col items-center justify-center py-2 text-gray-500 relative">
+        <button onclick="switchView('home')" class="nav-btn active w-1/4 flex flex-col items-center justify-center py-2 text-blue-500"><i class="fa-solid fa-code text-xl mb-1"></i><span class="text-[10px]">หน้าแรก</span></button>
+        <button onclick="switchView('feed')" class="nav-btn w-1/4 flex flex-col items-center justify-center py-2 text-gray-500"><i class="fa-solid fa-hashtag text-xl mb-1"></i><span class="text-[10px]">ฟีด</span></button>
+        <button onclick="openAddMode()" class="nav-btn w-1/4 flex flex-col items-center justify-center py-2 text-gray-500 relative">
             <div class="absolute -top-5 bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-4 border-gray-900 active:scale-90 transition"><i class="fa-solid fa-plus text-xl"></i></div>
             <span class="text-[10px] mt-6">ลงงาน</span>
         </button>
-        <button onclick="switchView('profile')" class="nav-btn w-1/3 flex flex-col items-center justify-center py-2 text-gray-500"><i class="fa-solid fa-user text-xl mb-1"></i><span class="text-[10px]">โปรไฟล์</span></button>
+        <button onclick="switchView('profile')" class="nav-btn w-1/4 flex flex-col items-center justify-center py-2 text-gray-500"><i class="fa-solid fa-user text-xl mb-1"></i><span class="text-[10px]">โปรไฟล์</span></button>
     </nav>
 
-    <!-- DELETE MODAL -->
-    <div id="modal-delete" class="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center hidden fade-in">
+    <!-- MODALS -->
+    
+    <!-- NEW FILE MODAL -->
+    <div id="modal-new-file" class="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center hidden fade-in">
+        <div class="bg-gray-800 w-[80%] max-w-xs p-6 rounded-2xl border border-gray-700">
+            <h3 class="text-white font-bold mb-4">เพิ่มไฟล์ใหม่</h3>
+            <input type="text" id="new-file-name" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white text-sm mb-3" placeholder="ชื่อไฟล์ (เช่น style)">
+            <select id="new-file-type" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white text-sm mb-3">
+                <option value="html">.html</option>
+                <option value="css">.css</option>
+                <option value="js">.js</option>
+            </select>
+            <button onclick="addNewFile()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-sm font-bold mb-2">สร้างไฟล์</button>
+            <button onclick="document.getElementById('modal-new-file').classList.add('hidden')" class="w-full text-gray-400 text-xs py-2">ยกเลิก</button>
+        </div>
+    </div>
+
+    <!-- POST CREATE/EDIT MODAL -->
+    <div id="modal-post-edit" class="fixed inset-0 z-[115] bg-black/90 flex items-center justify-center hidden transition-opacity duration-200 fade-in">
+        <div class="bg-gray-800 w-[90%] max-w-lg p-6 rounded-2xl border border-gray-700 flex flex-col">
+            <h3 id="post-modal-title" class="text-white font-bold mb-4 text-lg">สร้างโพสต์ใหม่</h3>
+            <textarea id="edit-post-content" class="w-full flex-1 bg-gray-900 border border-gray-700 rounded-xl p-4 text-white text-base resize-none focus:border-blue-500 outline-none placeholder-gray-500 mb-4 h-40" placeholder="เขียนอะไรหน่อย..."></textarea>
+            
+            <div id="edit-post-img-preview-container" class="relative hidden mb-4 rounded-xl overflow-hidden border border-gray-700 bg-black">
+                <img id="edit-post-img-preview" src="" class="w-full max-h-60 object-contain mx-auto">
+                <button onclick="clearPostImageEdit()" class="absolute top-2 right-2 bg-black/60 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500 transition"><i class="fa-solid fa-times"></i></button>
+            </div>
+
+            <div class="flex items-center gap-3 mt-auto pt-4 border-t border-gray-700">
+                <label class="cursor-pointer text-gray-400 hover:text-green-400 transition p-2 bg-gray-900 rounded-lg border border-gray-700">
+                    <i class="fa-solid fa-image text-xl"></i>
+                    <input type="file" id="edit-post-img-input" accept="image/*" class="hidden" onchange="handlePostImageEdit(this)">
+                </label>
+                <div class="flex-1 text-xs text-gray-500">
+                    <button onclick="removeImageIfEditing()" id="btn-remove-post-image" class="text-red-400 hover:text-red-300 hidden">ลบรูปเดิม</button>
+                </div>
+                <button onclick="closePostModal()" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2.5 px-6 rounded-xl transition">ยกเลิก</button>
+                <button onclick="savePost()" id="btn-save-post" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition">โพสต์</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMMENT MODAL -->
+    <div id="modal-comments" class="fixed inset-0 z-[110] bg-black/80 flex flex-col justify-end sm:justify-center hidden transition-opacity duration-200" onclick="if(event.target===this) closeComments()">
+        <div id="comment-panel" class="bg-gray-800 w-full sm:max-w-md mx-auto sm:rounded-2xl rounded-t-2xl h-[60vh] flex flex-col border-t border-gray-700 transform translate-y-full transition-transform duration-300">
+            <div class="flex justify-between items-center p-3 border-b border-gray-700">
+                <span class="text-white font-bold text-sm">ความคิดเห็น</span>
+                <button onclick="closeComments()" class="text-gray-400"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+            <div id="comment-list" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+            <div class="p-3 bg-gray-900 border-t border-gray-700 flex gap-2">
+                <input type="text" id="comment-input" class="flex-1 bg-gray-800 border border-gray-600 rounded-full px-4 py-2 text-white text-sm focus:border-blue-500 outline-none" placeholder="แสดงความคิดเห็น...">
+                <button onclick="sendComment()" class="bg-blue-600 w-9 h-9 rounded-full text-white flex items-center justify-center"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDITOR MENU -->
+    <div id="modal-editor-menu" class="fixed inset-0 z-[105] bg-black/80 flex items-end sm:items-center justify-center hidden fade-in" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="bg-gray-800 w-full sm:w-[300px] rounded-t-2xl sm:rounded-2xl p-4 border-t sm:border border-gray-700">
+            <div class="space-y-2">
+                <p class="text-gray-500 text-xs text-center mb-2 font-mono" id="current-file-label">index.html</p>
+                <button onclick="openImageTool(); document.getElementById('modal-editor-menu').classList.add('hidden')" class="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg flex items-center px-4 text-sm"><i class="fa-solid fa-image text-yellow-400 mr-3"></i> แปลงรูปเป็นโค้ด</button>
+                <button onclick="deleteCurrentFile()" id="btn-delete-file" class="w-full bg-red-900/30 hover:bg-red-900/50 text-red-400 py-3 rounded-lg flex items-center px-4 text-sm mt-2"><i class="fa-solid fa-trash mr-3"></i> ลบไฟล์นี้</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGE TOOL MODAL -->
+    <div id="modal-image" class="fixed inset-0 z-[120] bg-black/90 flex items-center justify-center hidden fade-in">
+        <div class="bg-gray-800 w-[90%] max-w-md p-6 rounded-2xl border border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-white font-bold">เครื่องมือรูปภาพ</h3>
+                <button onclick="document.getElementById('modal-image').classList.add('hidden')" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <input type="file" id="img-tool-input" accept="image/*" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500"/>
+            <div id="img-tool-preview" class="hidden mt-4">
+                <textarea id="base64-output" class="w-full h-20 bg-black text-green-400 text-[10px] font-mono p-2 rounded resize-none mb-2" readonly></textarea>
+                <button onclick="copyBase64()" class="w-full bg-gray-700 text-white py-2 rounded text-xs">Copy Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRM MODAL -->
+    <div id="modal-delete" class="fixed inset-0 z-[130] bg-black/80 flex items-center justify-center hidden fade-in">
         <div class="bg-gray-800 p-6 rounded-2xl w-[80%] max-w-xs text-center border border-gray-700">
             <div class="w-12 h-12 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-xl"><i class="fa-solid fa-trash"></i></div>
             <h3 class="text-white font-bold text-lg mb-2">ยืนยันการลบ?</h3>
@@ -170,58 +279,16 @@
         </div>
     </div>
 
-    <!-- TEMPLATE SELECTOR MODAL -->
-    <div id="modal-template" class="fixed inset-0 z-[90] bg-black/90 flex items-end sm:items-center justify-center hidden transition-opacity duration-300 opacity-0 pointer-events-none modal-bg">
-        <div class="bg-gray-800 w-full sm:w-[400px] rounded-t-2xl sm:rounded-2xl p-6 border-t sm:border border-gray-700 transform translate-y-full sm:translate-y-0 transition-transform duration-300 modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-white font-bold text-lg"><i class="fa-solid fa-wand-magic-sparkles text-yellow-400 mr-2"></i>เลือก Template</h3>
-                <button onclick="closeTemplateModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times"></i></button>
-            </div>
-            
-            <div class="space-y-3">
-                <!-- Template 1 -->
-                <div onclick="selectTemplate(1)" class="bg-gray-700 p-4 rounded-xl border border-gray-600 hover:border-blue-500 hover:bg-gray-600 cursor-pointer flex items-center gap-4 transition group">
-                    <div class="w-12 h-12 rounded-lg bg-purple-900/50 flex items-center justify-center text-purple-400 group-hover:text-white group-hover:bg-purple-600 transition">
-                        <i class="fa-solid fa-bolt"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-white font-bold text-sm">Neon Button</h4>
-                        <p class="text-xs text-gray-400">ปุ่มกดเรืองแสงแบบ Cyberpunk</p>
-                    </div>
-                </div>
-
-                <!-- Template 2 -->
-                <div onclick="selectTemplate(2)" class="bg-gray-700 p-4 rounded-xl border border-gray-600 hover:border-blue-500 hover:bg-gray-600 cursor-pointer flex items-center gap-4 transition group">
-                    <div class="w-12 h-12 rounded-lg bg-green-900/50 flex items-center justify-center text-green-400 group-hover:text-white group-hover:bg-green-600 transition">
-                        <i class="fa-regular fa-clock"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-white font-bold text-sm">Digital Clock</h4>
-                        <p class="text-xs text-gray-400">นาฬิกาไล่สีพื้นหลังสุดเท่</p>
-                    </div>
-                </div>
-
-                <!-- Template 3 -->
-                <div onclick="selectTemplate(3)" class="bg-gray-700 p-4 rounded-xl border border-gray-600 hover:border-blue-500 hover:bg-gray-600 cursor-pointer flex items-center gap-4 transition group">
-                    <div class="w-12 h-12 rounded-lg bg-blue-900/50 flex items-center justify-center text-blue-400 group-hover:text-white group-hover:bg-blue-600 transition">
-                        <i class="fa-solid fa-layer-group"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-white font-bold text-sm">Glass Card</h4>
-                        <p class="text-xs text-gray-400">การ์ดกระจกใส เปลี่ยนสีได้</p>
-                    </div>
-                </div>
-            </div>
-            <p class="text-center text-[10px] text-gray-500 mt-4">เลือกเพื่อนำโค้ดไปวางใน Editor</p>
-        </div>
-    </div>
-
     <!-- DETAIL OVERLAY -->
     <div id="view-detail" class="fixed inset-0 bg-gray-900 z-[60] flex flex-col hidden">
         <div class="flex justify-between items-center p-3 border-b border-gray-800 h-[60px]">
             <button onclick="closeDetail()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white"><i class="fa-solid fa-arrow-left text-lg"></i></button>
             <div class="text-center"><h2 id="d-title" class="font-bold text-white text-sm">Title</h2></div>
-            <button onclick="copyCode()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-blue-400"><i class="fa-regular fa-copy text-lg"></i></button>
+            <div class="flex items-center">
+                <!-- NEW: Edit Button -->
+                <button id="btn-edit-project" onclick="editCurrentProject()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-yellow-400 hidden"><i class="fa-solid fa-pen text-sm"></i></button>
+                <button onclick="copyCode()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-blue-400"><i class="fa-regular fa-copy text-lg"></i></button>
+            </div>
         </div>
         <div class="flex h-[40px] border-b border-gray-800 bg-gray-900 text-sm">
             <button onclick="switchDetailTab('preview')" id="tab-preview" class="flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50">Play</button>
@@ -242,9 +309,8 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, increment } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
-        // Config
         const firebaseConfig = {
             apiKey: "AIzaSyCO0XsFGLW7EiQ1XQA4haJBOpxhcjA9cCo",
             authDomain: "kkr-gulcode-community.firebaseapp.com",
@@ -261,100 +327,21 @@
 
         let currentUser = null;
         let allProjects = [];
+        let allPosts = [];
         let currentCategory = 'All';
-        let editingId = null;
-        let deletingId = null;
-
-        // --- TEMPLATE DATA ---
-        // Note: Used alert() in template 1 for simplicity and effect, as it runs inside an iframe.
-        const templates = {
-            1: `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f0c29; font-family: sans-serif; margin: 0; }
-  button {
-    padding: 20px 40px; font-size: 24px; color: #03e9f4; text-transform: uppercase; text-decoration: none; letter-spacing: 4px;
-    background: transparent; border: 2px solid #03e9f4; border-radius: 5px; box-shadow: 0 0 10px #03e9f4; transition: 0.5s; cursor: pointer; position: relative; overflow: hidden;
-  }
-  button:hover { background: #03e9f4; color: #050801; box-shadow: 0 0 50px #03e9f4, 0 0 200px #03e9f4; }
-</style>
-</head>
-<body>
-  <button onclick="alert('BOOM! Neon Power!')">NEON CLICK</button>
-</body>
-</html>`,
-            2: `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #111; font-family: 'Courier New', monospace; }
-  .clock { 
-    font-size: 60px; font-weight: bold; 
-    background: linear-gradient(45deg, #ff00cc, #3333ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-shadow: 0px 0px 20px rgba(255, 0, 204, 0.3);
-  }
-</style>
-</head>
-<body>
-  <div class="clock" id="time">00:00:00</div>
-  <script>
-    setInterval(() => {
-      const now = new Date();
-      // Format time safely without alert() or external libraries
-      document.getElementById('time').innerText = now.toLocaleTimeString('en-US', { hour12: false });
-    }, 1000);
-  <\/script>
-</body>
-</html>`,
-            3: `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(to right, #4facfe, #00f2fe); margin: 0; font-family: sans-serif; }
-  .card {
-    background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; width: 250px; text-align: center;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); border: 1px solid rgba(255, 255, 255, 0.18); transition: 0.3s;
-  }
-  .card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.4); }
-  h2 { color: white; margin-bottom: 10px; }
-  p { color: #eee; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <h2>Glass Card</h2>
-    <p>Hover over me to see the magic effect!</p>
-  </div>
-</body>
-</html>`
-        };
-
-        // --- TEMPLATE FUNCTIONS ---
-        window.openTemplateModal = () => {
-            const modal = document.getElementById('modal-template');
-            const content = modal.querySelector('.modal-content');
-            modal.classList.remove('hidden');
-            // Animation timeout
-            setTimeout(() => {
-                modal.classList.remove('opacity-0', 'pointer-events-none');
-                content.classList.remove('translate-y-full');
-            }, 10);
-        };
-
-        window.closeTemplateModal = () => {
-            const modal = document.getElementById('modal-template');
-            const content = modal.querySelector('.modal-content');
-            modal.classList.add('opacity-0', 'pointer-events-none');
-            content.classList.add('translate-y-full');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        };
-
-        window.selectTemplate = (id) => {
-            document.getElementById('p-code').value = templates[id];
-            closeTemplateModal();
-            showToast("โหลด Template เรียบร้อย!");
-        };
+        let feedFilter = 'latest';
+        
+        // State for Editing
+        let editingId = null; 
+        let editingPostId = null;
+        let currentPostImg = null;
+        let currentProjectData = null; 
+        let deletingTarget = { id: null, type: null }; 
+        let activeCommentPostId = null;
+        
+        let editorMode = 'normal'; 
+        let currentFiles = []; 
+        let activeFileIndex = 0;
 
         // --- AUTH ---
         window.handleAuth = async (mode) => {
@@ -371,9 +358,10 @@
                 } else {
                     await signInWithEmailAndPassword(auth, email, p);
                 }
-            } catch(e) { err.innerText = "เกิดข้อผิดพลาด"; console.error(e); }
+            } catch(e) { err.innerText = "เกิดข้อผิดพลาด (ชื่อซ้ำหรือรหัสผิด)"; console.error(e); }
         };
         window.logout = () => signOut(auth).then(() => location.reload());
+        
         onAuthStateChanged(auth, user => {
             if(user) {
                 currentUser = user;
@@ -384,128 +372,493 @@
                 document.getElementById('header-username').innerText = user.displayName;
                 document.getElementById('profile-name').innerText = user.displayName;
                 setupDB();
-                showToast("ยินดีต้อนรับ!");
+                setEditorMode('normal'); 
             } else { document.getElementById('view-auth').classList.remove('hidden'); }
         });
 
-        // --- DB & RENDER ---
+        // --- DB Listener ---
         function setupDB() {
-            const q = query(collection(db, 'projects'));
-            onSnapshot(q, snapshot => {
+            const qP = query(collection(db, 'projects'));
+            onSnapshot(qP, snapshot => {
                 allProjects = [];
                 let myCount = 0;
                 snapshot.forEach(doc => {
                     const d = doc.data();
                     allProjects.push({ id: doc.id, ...d });
-                    if(d.authorId === currentUser.uid) myCount++;
+                    if(d.authorId === (currentUser?.uid || '')) myCount++;
                 });
-                document.getElementById('stats-count').innerText = myCount;
-                allProjects.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                document.getElementById('stats-projects').innerText = myCount;
                 renderProjects();
+            });
+
+            const qFeed = query(collection(db, 'posts'));
+            onSnapshot(qFeed, snapshot => {
+                allPosts = [];
+                let myCount = 0;
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    allPosts.push({ id: doc.id, ...d });
+                    if(d.authorId === (currentUser?.uid || '')) myCount++;
+                });
+                document.getElementById('stats-posts').innerText = myCount;
+                renderFeed();
+                
+                if(activeCommentPostId) {
+                    const p = allPosts.find(x => x.id === activeCommentPostId);
+                    if(p) renderCommentsList(p.comments || []);
+                }
             });
         }
 
-        const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', (e) => renderProjects(e.target.value.trim()));
-
-        function renderProjects(searchTerm = "") {
+        // --- RENDER: PROJECTS ---
+        window.renderProjects = () => {
+            const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
             const list = document.getElementById('project-list');
             list.innerHTML = '';
-            let filtered = currentCategory === 'All' ? allProjects : allProjects.filter(p => p.category === currentCategory);
-            if (searchTerm) {
-                const lowerTerm = searchTerm.toLowerCase();
-                filtered = filtered.filter(p => p.title.toLowerCase().includes(lowerTerm) || p.authorName.toLowerCase().includes(lowerTerm));
+            
+            let filtered;
+            if (currentCategory === 'Popular') filtered = [...allProjects].sort((a, b) => (b.likes || 0) - (a.likes || 0));
+            else {
+                filtered = currentCategory === 'All' ? allProjects : allProjects.filter(p => p.category === currentCategory);
+                filtered.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
             }
+            
+            if (searchTerm) filtered = filtered.filter(p => p.title.toLowerCase().includes(searchTerm) || p.authorName.toLowerCase().includes(searchTerm));
+            
             if(filtered.length === 0) { list.innerHTML = '<div class="text-center text-gray-600 py-10 text-sm">ไม่พบข้อมูล</div>'; return; }
 
             filtered.forEach(p => {
                 const isOwner = currentUser && p.authorId === currentUser.uid;
+                const isLiked = p.likedBy && p.likedBy.includes(currentUser.uid);
                 let icon = 'fa-code'; let col = 'text-blue-400 bg-blue-900/20';
                 if(p.category === 'Game') { icon = 'fa-gamepad'; col = 'text-purple-400 bg-purple-900/20'; }
                 if(p.category === 'App') { icon = 'fa-mobile-screen'; col = 'text-green-400 bg-green-900/20'; }
-                let manageBtns = isOwner ? `
-                    <div class="flex gap-2 ml-3 pl-3 border-l border-gray-700">
-                        <button onclick="event.stopPropagation(); editProject('${p.id}')" class="w-8 h-8 rounded-lg bg-gray-700 text-gray-400 hover:text-white hover:bg-gray-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button onclick="event.stopPropagation(); promptDelete('${p.id}')" class="w-8 h-8 rounded-lg bg-gray-700 text-gray-400 hover:text-red-400 hover:bg-gray-600 flex items-center justify-center transition"><i class="fa-solid fa-trash text-xs"></i></button>
-                    </div>` : '';
-
+                
+                const safeP = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
                 const html = `
-                <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-gray-600 active:scale-[0.99] transition-all cursor-pointer shadow-sm flex items-center justify-between group">
+                <div onclick='openDetail(${safeP})' class="bg-gray-800 p-4 rounded-xl border border-gray-700 hover:border-gray-600 active:scale-[0.99] transition-all cursor-pointer shadow-sm flex items-center justify-between group fade-in">
                     <div class="flex items-center gap-3 overflow-hidden flex-1">
                         <div class="w-10 h-10 rounded-lg ${col} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${icon}"></i></div>
-                        <div class="min-w-0">
-                            <h3 class="font-bold text-gray-200 text-sm truncate">${escapeHtml(p.title)}</h3>
-                            <p class="text-[10px] text-gray-500 truncate flex items-center gap-1"><i class="fa-regular fa-user"></i> ${escapeHtml(p.authorName)}</p>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-bold text-gray-200 text-sm truncate flex items-center">${p.title} ${p.mode === 'advanced' ? '<span class="ml-2 text-[8px] bg-purple-600 px-1 rounded">ADV</span>' : ''}</h3>
+                            <p class="text-[10px] text-gray-500 truncate flex items-center gap-1"><i class="fa-regular fa-user"></i> ${p.authorName}</p>
                         </div>
                     </div>
-                    ${manageBtns}
+                    <div class="flex items-center">
+                        <button onclick="event.stopPropagation(); toggleLikeProject('${p.id}')" class="flex flex-col items-center justify-center w-8 h-8 rounded-full hover:bg-gray-700/50 transition mr-1">
+                            <i class="${isLiked ? 'fa-solid text-red-500 heart-pop' : 'fa-regular text-gray-500'} fa-heart transition-colors"></i>
+                            <span class="text-[9px] ${isLiked ? 'text-red-400' : 'text-gray-500'}">${p.likes || 0}</span>
+                        </button>
+                        ${isOwner ? `
+                            <button onclick="event.stopPropagation(); openEditProject('${p.id}')" class="w-8 h-8 rounded text-gray-400 hover:text-yellow-400 hover:bg-gray-700/50 flex items-center justify-center transition"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="event.stopPropagation(); promptDelete('${p.id}', 'project')" class="w-8 h-8 rounded text-gray-400 hover:text-red-400 hover:bg-gray-700/50 flex items-center justify-center transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                        ` : ''}
+                    </div>
                 </div>`;
                 list.insertAdjacentHTML('beforeend', html);
             });
         }
 
-        // --- EDIT / ADD / DELETE ---
-        window.openAddMode = () => {
-            editingId = null; resetForm();
-            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-pen-to-square mr-2 text-blue-500"></i>สร้างงานใหม่';
-            document.getElementById('btn-save').innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> เผยแพร่';
-            document.getElementById('btn-save').className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2";
-            switchView('add');
+        // --- RENDER: FEED ---
+        window.setFeedFilter = (f) => {
+            feedFilter = f;
+            document.getElementById('feed-filter-latest').className = f==='latest' ? "px-3 py-1 rounded text-xs font-bold bg-blue-600 text-white transition" : "px-3 py-1 rounded text-xs font-bold text-gray-400 hover:text-white transition";
+            document.getElementById('feed-filter-popular').className = f==='popular' ? "px-3 py-1 rounded text-xs font-bold bg-gray-700 text-red-400 border border-red-900/50 transition" : "px-3 py-1 rounded text-xs font-bold text-gray-400 hover:text-white transition";
+            renderFeed();
         };
-        window.editProject = (id) => {
-            const p = allProjects.find(proj => proj.id === id);
-            if(!p) return;
-            editingId = id;
-            document.getElementById('p-title').value = p.title;
-            document.getElementById('p-desc').value = p.description || '';
-            document.getElementById('p-code').value = p.code;
-            document.getElementById('p-category').value = p.category;
-            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-wrench mr-2 text-yellow-500"></i>แก้ไขงาน';
-            document.getElementById('btn-save').innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> บันทึกการแก้ไข';
-            document.getElementById('btn-save').className = "w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-lg mt-2";
-            switchView('add');
-        };
-        window.saveProject = async () => {
-            const t = document.getElementById('p-title').value.trim();
-            const d = document.getElementById('p-desc').value.trim();
-            const c = document.getElementById('p-code').value;
-            const cat = document.getElementById('p-category').value;
-            if(!t || !c) return showToast("ใส่ข้อมูลให้ครบ", true);
-            const btn = document.getElementById('btn-save'); const oldText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...'; btn.disabled = true;
-            try {
-                if(editingId) { await updateDoc(doc(db, 'projects', editingId), { title: t, description: d, code: c, category: cat, isEdited: true }); showToast("แก้ไขสำเร็จ!"); } 
-                else { await addDoc(collection(db, 'projects'), { title: t, description: d, code: c, category: cat, authorId: currentUser.uid, authorName: currentUser.displayName, timestamp: serverTimestamp(), likes: 0 }); showToast("เผยแพร่สำเร็จ!"); }
-                switchView('home');
-            } catch(e) { console.error(e); showToast("เกิดข้อผิดพลาด", true); } finally { btn.innerHTML = oldText; btn.disabled = false; }
-        };
-        window.promptDelete = (id) => { deletingId = id; document.getElementById('modal-delete').classList.remove('hidden'); };
-        window.closeDeleteModal = () => { document.getElementById('modal-delete').classList.add('hidden'); deletingId = null; };
-        window.confirmDelete = async () => { if(!deletingId) return; try { await deleteDoc(doc(db, 'projects', deletingId)); showToast("ลบโปรเจกต์แล้ว"); } catch(e) { console.error(e); showToast("ลบไม่สำเร็จ", true); } closeDeleteModal(); };
 
-        // --- UTILS ---
-        window.resetForm = () => { document.getElementById('p-title').value = ''; document.getElementById('p-desc').value = ''; document.getElementById('p-code').value = ''; };
+        window.renderFeed = () => {
+            const list = document.getElementById('feed-list');
+            list.innerHTML = '';
+            
+            let items = [...allPosts];
+            if(feedFilter === 'popular') items.sort((a,b) => (b.likes||0) - (a.likes||0));
+            else items.sort((a,b) => (b.timestamp?.seconds||0) - (a.timestamp?.seconds||0));
+
+            if(items.length === 0) { list.innerHTML = '<div class="text-center text-gray-500 py-10">ยังไม่มีโพสต์</div>'; return; }
+
+            items.forEach(p => {
+                const isOwner = currentUser && p.authorId === currentUser.uid;
+                const isLiked = p.likedBy && p.likedBy.includes(currentUser.uid);
+                
+                list.innerHTML += `
+                <div class="bg-gray-800 rounded-xl border border-gray-700 p-4 fade-in">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-[10px] font-bold border border-gray-600">${p.authorName.substr(0,2).toUpperCase()}</div>
+                            <div>
+                                <div class="text-sm font-bold text-gray-200 leading-none">${p.authorName}</div>
+                                <div class="text-[10px] text-gray-500 mt-1">${timeAgo(p.timestamp)}</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            ${isOwner ? `<button onclick="openPostModal('${p.id}')" class="text-gray-500 hover:text-yellow-400 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>` : ''}
+                            ${isOwner ? `<button onclick="promptDelete('${p.id}', 'post')" class="text-gray-500 hover:text-red-400 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-300 mb-3 whitespace-pre-wrap leading-relaxed">${p.content}</div>
+                    ${p.imageUrl ? `<div class="mb-3 rounded-lg overflow-hidden bg-black/50 border border-gray-700/50"><img src="${p.imageUrl}" class="w-full max-h-80 object-contain" loading="lazy"></div>` : ''}
+                    <div class="flex items-center gap-4 pt-2 border-t border-gray-700/50">
+                        <button onclick="toggleLikePost('${p.id}')" class="flex items-center gap-2 text-xs ${isLiked ? 'text-red-400' : 'text-gray-400'} hover:text-red-400 transition">
+                            <i class="${isLiked ? 'fa-solid heart-pop' : 'fa-regular'} fa-heart text-base"></i> ${p.likes || 0}
+                        </button>
+                        <button onclick="openComments('${p.id}')" class="flex items-center gap-2 text-xs text-gray-400 hover:text-blue-400 transition">
+                            <i class="fa-regular fa-comment text-base"></i> ${(p.comments||[]).length}
+                        </button>
+                    </div>
+                </div>`;
+            });
+        };
+
+        // --- EDITOR LOGIC ---
+        window.setEditorMode = (mode) => {
+            editorMode = mode;
+            document.getElementById('btn-mode-normal').className = mode==='normal'?"flex-1 py-1.5 rounded-md text-xs font-bold bg-blue-600 text-white shadow transition":"flex-1 py-1.5 rounded-md text-xs font-bold text-gray-400 hover:text-white transition";
+            document.getElementById('btn-mode-advanced').className = mode==='advanced'?"flex-1 py-1.5 rounded-md text-xs font-bold bg-purple-600 text-white shadow transition":"flex-1 py-1.5 rounded-md text-xs font-bold text-gray-400 hover:text-white transition";
+            
+            const topBar = document.getElementById('editor-top-bar');
+            if(mode === 'normal') {
+                topBar.classList.add('hidden');
+                currentFiles = [{ name: 'index.html', type: 'html', content: '' }];
+                activeFileIndex = 0;
+                renderEditorContent();
+            } else {
+                topBar.classList.remove('hidden');
+                if(currentFiles.length <= 1 && currentFiles[0].name === 'index.html' && !currentFiles[0].content) {
+                    currentFiles = [
+                        { name: "index.html", type: "html", content: "<!DOCTYPE html>\n<html>\n<body>\n  <h1>Hello</h1>\n  <script src=\"script.js\"><" + "/script>\n</body>\n</html>" },
+                        { name: "script.js", type: "js", content: "console.log('Ready');" }
+                    ];
+                }
+                renderTabs();
+                renderEditorContent();
+            }
+        };
+
+        window.renderTabs = () => {
+            const c = document.getElementById('file-tabs-container'); c.innerHTML = '';
+            currentFiles.forEach((f, i) => {
+                let ic = 'fa-file';
+                if(f.type==='html') ic = 'fa-brands fa-html5 file-icon-html';
+                if(f.type==='css') ic = 'fa-brands fa-css3-alt file-icon-css';
+                if(f.type==='js') ic = 'fa-brands fa-js file-icon-js';
+                const d = document.createElement('div'); d.className = `file-tab ${i===activeFileIndex?'active':''}`;
+                d.onclick = () => switchFile(i);
+                d.innerHTML = `<i class="${ic}"></i> ${f.name}`;
+                c.appendChild(d);
+            });
+        };
+
+        window.switchFile = (i) => { currentFiles[activeFileIndex].content = document.getElementById('code-editor').value; activeFileIndex = i; renderTabs(); renderEditorContent(); };
+        window.renderEditorContent = () => { document.getElementById('code-editor').value = currentFiles[activeFileIndex].content || ''; };
+        window.openNewFileModal = () => document.getElementById('modal-new-file').classList.remove('hidden');
+        window.addNewFile = () => {
+            const name = document.getElementById('new-file-name').value.trim();
+            const type = document.getElementById('new-file-type').value;
+            if(!name) return showToast("ใส่ชื่อไฟล์", true);
+            currentFiles.push({ name: name.endsWith('.'+type)?name:name+'.'+type, type: type, content: '' });
+            document.getElementById('modal-new-file').classList.add('hidden');
+            currentFiles[activeFileIndex].content = document.getElementById('code-editor').value;
+            activeFileIndex = currentFiles.length - 1;
+            renderTabs(); renderEditorContent();
+        };
+        window.openEditorMenu = () => {
+            document.getElementById('current-file-label').innerText = currentFiles[activeFileIndex].name;
+            document.getElementById('btn-delete-file').style.display = currentFiles.length > 1 ? 'flex' : 'none';
+            document.getElementById('modal-editor-menu').classList.remove('hidden');
+        };
+        window.deleteCurrentFile = () => {
+            if(currentFiles.length <= 1) return;
+            currentFiles.splice(activeFileIndex, 1);
+            activeFileIndex = Math.max(0, activeFileIndex - 1);
+            renderTabs(); renderEditorContent();
+            document.getElementById('modal-editor-menu').classList.add('hidden');
+        };
+
+        // --- PROJECT EDIT LOGIC ---
+        // New helper to edit from list directly
+        window.openEditProject = (id) => {
+            const p = allProjects.find(x => x.id === id);
+            if(!p) return;
+            currentProjectData = p; // Set global state
+            editCurrentProject(); // Reuse logic
+        };
+
+        window.editCurrentProject = () => {
+            if (!currentProjectData) return;
+            editingId = currentProjectData.id;
+            
+            document.getElementById('p-title').value = currentProjectData.title;
+            document.getElementById('p-desc').value = currentProjectData.description;
+            document.getElementById('p-category').value = currentProjectData.category;
+            setEditorMode(currentProjectData.mode);
+            
+            currentFiles = currentProjectData.files;
+            activeFileIndex = 0;
+            renderTabs();
+            renderEditorContent();
+            
+            document.getElementById('btn-save-project').innerHTML = '<i class="fa-solid fa-upload mr-2"></i> อัปเดตโปรเจกต์';
+            
+            closeDetail(); 
+            switchView('add'); 
+        };
+
+        // --- ADD/EDIT PROJECT ---
+        window.saveProject = async () => {
+            currentFiles[activeFileIndex].content = document.getElementById('code-editor').value;
+            const t = document.getElementById('p-title').value.trim();
+            if(!t) return showToast("ใส่ชื่อโปรเจกต์", true);
+            
+            let main = currentFiles.find(f => f.type==='html') || currentFiles[0];
+            let code = main.content;
+            currentFiles.filter(f=>f.type==='css').forEach(c=> { code = code.replace(new RegExp(`<link[^>]+href=["']${c.name}["'][^>]*>`, 'gi'), `<style>${c.content}</style>`); });
+            currentFiles.filter(f=>f.type==='js').forEach(j=> { code = code.replace(new RegExp(`<script[^>]+src=["']${j.name}["'][^>]*><`+'/script>', 'gi'), () => `<script>${j.content}<`+'/script>'); });
+
+            const projectData = {
+                title: t, description: document.getElementById('p-desc').value, category: document.getElementById('p-category').value,
+                mode: editorMode, files: currentFiles, code: code,
+                authorId: currentUser.uid, authorName: currentUser.displayName,
+            };
+            
+            try {
+                if (editingId) {
+                    await updateDoc(doc(db, 'projects', editingId), projectData); 
+                    showToast("อัปเดตโปรเจกต์สำเร็จ!");
+                } else {
+                    await addDoc(collection(db, 'projects'), {
+                        ...projectData,
+                        timestamp: serverTimestamp(), likes: 0, likedBy: []
+                    });
+                    showToast("ลงโปรเจกต์สำเร็จ!");
+                }
+                
+                resetForm(); 
+                switchView('home');
+            } catch(e) { 
+                showToast("ผิดพลาดในการบันทึก", true); 
+                console.error(e);
+            }
+        };
+
+        // --- POST CREATE/EDIT LOGIC ---
+        window.handlePostImageEdit = (input) => {
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 800;
+                        const scale = MAX_SIZE / Math.max(img.width, 800);
+                        canvas.width = img.width * scale; canvas.height = img.height * scale;
+                        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+                        currentPostImg = canvas.toDataURL('image/jpeg', 0.7); 
+                        document.getElementById('edit-post-img-preview').src = currentPostImg;
+                        document.getElementById('edit-post-img-preview-container').classList.remove('hidden');
+                        document.getElementById('btn-remove-post-image').classList.add('hidden');
+                    };
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+        window.clearPostImageEdit = () => { 
+            currentPostImg = null; 
+            document.getElementById('edit-post-img-input').value=''; 
+            document.getElementById('edit-post-img-preview-container').classList.add('hidden'); 
+            document.getElementById('btn-remove-post-image').classList.add('hidden');
+        };
+        window.removeImageIfEditing = () => {
+            currentPostImg = "REMOVE_IMAGE_FLAG";
+            document.getElementById('edit-post-img-preview-container').classList.add('hidden');
+            document.getElementById('btn-remove-post-image').classList.add('hidden');
+            document.getElementById('edit-post-img-input').value = '';
+            showToast("รูปภาพจะถูกลบเมื่ออัปเดต");
+        };
+
+        window.openPostModal = (id = null) => {
+            editingPostId = id;
+            currentPostImg = null; 
+            const isEditing = id !== null;
+            const postModal = document.getElementById('modal-post-edit');
+            const title = document.getElementById('post-modal-title');
+            const contentInput = document.getElementById('edit-post-content');
+            const saveButton = document.getElementById('btn-save-post');
+            const removeImgBtn = document.getElementById('btn-remove-post-image');
+            
+            title.innerText = isEditing ? "แก้ไขโพสต์" : "สร้างโพสต์ใหม่";
+            saveButton.innerHTML = isEditing ? "อัปเดต" : "โพสต์";
+            
+            if (isEditing) {
+                const post = allPosts.find(p => p.id === id);
+                if (!post) return showToast("ไม่พบโพสต์", true);
+                contentInput.value = post.content;
+                currentPostImg = post.imageUrl || null;
+                if (post.imageUrl) {
+                    document.getElementById('edit-post-img-preview').src = post.imageUrl;
+                    document.getElementById('edit-post-img-preview-container').classList.remove('hidden');
+                    removeImgBtn.classList.remove('hidden');
+                } else { clearPostImageEdit(); }
+            } else {
+                contentInput.value = '';
+                clearPostImageEdit();
+            }
+            postModal.classList.remove('hidden');
+        };
+
+        window.closePostModal = () => {
+            document.getElementById('modal-post-edit').classList.add('hidden');
+            editingPostId = null;
+            clearPostImageEdit();
+        };
+
+        window.savePost = async () => {
+            const content = document.getElementById('edit-post-content').value.trim();
+            if(!content && !currentPostImg && currentPostImg !== "REMOVE_IMAGE_FLAG") return showToast("ใส่ข้อความหรือรูป", true);
+            const postData = { content };
+            if (currentPostImg === "REMOVE_IMAGE_FLAG") {
+                postData.imageUrl = null; 
+            } else if (currentPostImg && currentPostImg.startsWith('data:')) {
+                postData.imageUrl = currentPostImg; 
+            } else if (!editingPostId && currentPostImg) {
+                 postData.imageUrl = currentPostImg; 
+            }
+
+            try {
+                if (editingPostId) {
+                    await updateDoc(doc(db, 'posts', editingPostId), postData);
+                    showToast("อัปเดตโพสต์สำเร็จ!");
+                } else {
+                    await addDoc(collection(db, 'posts'), {
+                        ...postData,
+                        authorId: currentUser.uid, authorName: currentUser.displayName, timestamp: serverTimestamp(), likes: 0, likedBy: [], comments: []
+                    });
+                    showToast("โพสต์สำเร็จ!");
+                }
+                closePostModal();
+            } catch(e) { 
+                showToast("ผิดพลาดในการบันทึกโพสต์", true); 
+                console.error(e);
+            }
+        };
+
+
+        // --- INTERACTION LOGIC ---
+        window.toggleLikeProject = async (id) => toggleLikeGeneric('projects', id);
+        window.toggleLikePost = async (id) => toggleLikeGeneric('posts', id);
+
+        async function toggleLikeGeneric(coll, id) {
+            if(!currentUser) return;
+            const item = (coll==='projects'?allProjects:allPosts).find(x=>x.id===id);
+            const isLiked = item.likedBy && item.likedBy.includes(currentUser.uid);
+            const ref = doc(db, coll, id);
+            await updateDoc(ref, { likes: increment(isLiked?-1:1), likedBy: isLiked?arrayRemove(currentUser.uid):arrayUnion(currentUser.uid) });
+        }
+
+        window.openComments = (id) => {
+            activeCommentPostId = id;
+            document.getElementById('modal-comments').classList.remove('hidden');
+            setTimeout(()=>document.getElementById('comment-panel').classList.remove('translate-y-full'), 10);
+            const p = allPosts.find(x=>x.id===id);
+            if(p) renderCommentsList(p.comments||[]);
+        };
+        window.closeComments = () => {
+            document.getElementById('comment-panel').classList.add('translate-y-full');
+            setTimeout(()=>document.getElementById('modal-comments').classList.add('hidden'), 300);
+            activeCommentPostId = null;
+        };
+        function renderCommentsList(list) {
+            const c = document.getElementById('comment-list'); c.innerHTML = '';
+            if(list.length===0) c.innerHTML = '<div class="text-gray-500 text-center text-xs mt-4">ไม่มีความคิดเห็น</div>';
+            list.sort((a,b) => (a.timestamp || 0) - (b.timestamp || 0)); 
+            list.forEach(x => {
+                c.innerHTML += `<div class="flex gap-2"><div class="font-bold text-blue-400 text-xs whitespace-nowrap">${x.userName}:</div><div class="text-gray-300 text-xs">${x.text}</div></div>`;
+            });
+            c.scrollTop = c.scrollHeight;
+        }
+        window.sendComment = async () => {
+            const txt = document.getElementById('comment-input').value.trim();
+            if(!txt || !activeCommentPostId) return;
+            await updateDoc(doc(db, 'posts', activeCommentPostId), { comments: arrayUnion({ userId: currentUser.uid, userName: currentUser.displayName, text: txt, timestamp: Date.now() }) });
+            document.getElementById('comment-input').value='';
+        };
+
+        // --- GENERAL UTILS ---
         window.switchView = (v) => {
-            ['home', 'add', 'profile'].forEach(id => document.getElementById('view-'+id).classList.add('hidden'));
+            ['home','feed','add','profile'].forEach(x=>document.getElementById('view-'+x).classList.add('hidden'));
             document.getElementById('view-'+v).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-blue-500'); b.classList.add('text-gray-500'); });
-            if(v==='home') document.querySelectorAll('.nav-btn')[0].classList.add('text-blue-500');
-            if(v==='profile') document.querySelectorAll('.nav-btn')[2].classList.add('text-blue-500');
+            document.querySelectorAll('.nav-btn').forEach(b=>{ b.classList.remove('text-blue-500'); b.classList.add('text-gray-500'); });
+            if(v==='home') document.querySelectorAll('.nav-btn')[0].classList.replace('text-gray-500','text-blue-500');
+            if(v==='feed') document.querySelectorAll('.nav-btn')[1].classList.replace('text-gray-500','text-blue-500');
+            if(v==='profile') document.querySelectorAll('.nav-btn')[3].classList.replace('text-gray-500','text-blue-500');
         };
-        window.filterProjects = (c) => {
-            currentCategory = c;
-            document.querySelectorAll('.cat-btn').forEach(b => { b.className = b.dataset.cat === c ? "cat-btn active shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium shadow-md" : "cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs"; });
-            renderProjects(document.getElementById('search-input').value.trim());
+        window.openAddMode = () => { switchView('add'); resetForm(); }; 
+        window.resetForm = () => {
+            editingId = null;
+            currentProjectData = null;
+            document.getElementById('p-title').value=''; document.getElementById('p-desc').value=''; document.getElementById('code-editor').value='';
+            setEditorMode('normal');
+            document.getElementById('btn-save-project').innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> ลงงาน';
         };
-        window.openDetail = (p) => { document.getElementById('d-title').innerText = p.title; document.getElementById('code-display').innerText = p.code; document.getElementById('preview-frame').srcdoc = p.code; document.getElementById('view-detail').classList.remove('hidden'); switchDetailTab('preview'); };
-        window.closeDetail = () => { document.getElementById('view-detail').classList.add('hidden'); document.getElementById('preview-frame').srcdoc = ''; };
+        window.filterProjects = (c) => { 
+            currentCategory = c; 
+            document.querySelectorAll('.cat-btn').forEach(b => {
+                if(b.dataset.cat === c) b.className = "cat-btn active shrink-0 bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-medium shadow-md";
+                else b.className = "cat-btn shrink-0 bg-gray-800 text-gray-400 border border-gray-700 px-4 py-1.5 rounded-full text-xs";
+                if(b.dataset.cat === 'Popular') b.classList.add(b.dataset.cat===c?'bg-red-600':'text-red-400');
+            });
+            renderProjects(); 
+        };
+        
+        window.promptDelete = (id, type) => { deletingTarget = {id, type}; document.getElementById('modal-delete').classList.remove('hidden'); };
+        window.closeDeleteModal = () => { document.getElementById('modal-delete').classList.add('hidden'); deletingTarget = {id:null,type:null}; };
+        window.confirmDelete = async () => {
+            if(!deletingTarget.id) return;
+            try { await deleteDoc(doc(db, deletingTarget.type+'s', deletingTarget.id)); showToast("ลบสำเร็จ"); } catch(e){ showToast("ลบไม่สำเร็จ", true); }
+            closeDeleteModal();
+        };
+
+        window.openImageTool = () => document.getElementById('modal-image').classList.remove('hidden');
+        document.getElementById('img-tool-input').addEventListener('change', function(e){
+            if(!e.target.files[0]) return;
+            const r = new FileReader();
+            r.onload = (ev) => {
+                document.getElementById('img-tool-preview').classList.remove('hidden');
+                document.getElementById('base64-output').value = `<img src="${ev.target.result}" width="100">`;
+            };
+            r.readAsDataURL(e.target.files[0]);
+        });
+        window.copyBase64 = () => { document.getElementById('base64-output').select(); document.execCommand('copy'); showToast("Copied!"); };
+
+        window.openDetail = (p) => { 
+            currentProjectData = p; 
+            const isOwner = currentUser && p.authorId === currentUser.uid;
+            document.getElementById('btn-edit-project').classList.toggle('hidden', !isOwner);
+
+            document.getElementById('d-title').innerText=p.title; 
+            document.getElementById('preview-frame').srcdoc=p.code; 
+            document.getElementById('code-display').innerText=p.code; 
+            document.getElementById('view-detail').classList.remove('hidden'); 
+            switchDetailTab('preview'); 
+        };
+        window.closeDetail = () => { document.getElementById('view-detail').classList.add('hidden'); document.getElementById('preview-frame').srcdoc=''; currentProjectData = null; };
         window.switchDetailTab = (t) => {
-            if(t==='preview') { document.getElementById('content-preview').classList.remove('hidden'); document.getElementById('content-code').classList.add('hidden'); document.getElementById('tab-preview').className = "flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50"; document.getElementById('tab-code').className = "flex-1 text-gray-500"; } 
-            else { document.getElementById('content-preview').classList.add('hidden'); document.getElementById('content-code').classList.remove('hidden'); document.getElementById('tab-code').className = "flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50"; document.getElementById('tab-preview').className = "flex-1 text-gray-500"; }
+            document.getElementById('content-preview').classList.toggle('hidden', t!=='preview');
+            document.getElementById('content-code').classList.toggle('hidden', t!=='code');
+            document.getElementById('tab-preview').className = t==='preview'?"flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50":"flex-1 text-gray-500";
+            document.getElementById('tab-code').className = t==='code'?"flex-1 text-blue-400 border-b-2 border-blue-500 bg-gray-800/50":"flex-1 text-gray-500";
         };
-        window.copyCode = () => { navigator.clipboard.writeText(document.getElementById('code-display').innerText); showToast("Copied!"); };
-        window.showToast = (m, err=false) => { const t = document.getElementById('toast'); document.getElementById('toast-msg').innerText = m; t.querySelector('i').className = err ? "fa-solid fa-circle-exclamation text-red-400" : "fa-solid fa-circle-check text-green-400"; t.classList.remove('opacity-0'); setTimeout(()=>t.classList.add('opacity-0'), 2000); };
-        function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
+        window.copyCode = () => { const t=document.createElement('textarea'); t.value=document.getElementById('code-display').innerText; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); showToast("Copied!"); };
+
+        window.showToast = (m, err=false) => { 
+            const t = document.getElementById('toast'); 
+            document.getElementById('toast-msg').innerText = m; 
+            t.querySelector('i').className = err ? "fa-solid fa-circle-exclamation text-red-400" : "fa-solid fa-circle-check text-green-400"; 
+            t.classList.remove('opacity-0', 'pointer-events-none'); t.classList.add('top-4', 'opacity-100'); 
+            setTimeout(()=>{ t.classList.remove('top-4', 'opacity-100'); t.classList.add('opacity-0', 'pointer-events-none'); }, 2500); 
+        };
+        function timeAgo(ts) { if(!ts) return 'Just now'; const s = Math.floor((new Date()-ts.toDate())/1000); if(s<60)return 'เมื่อกี้'; if(s<3600)return Math.floor(s/60)+' นาทีที่แล้ว'; if(s<86400)return Math.floor(s/3600)+' ชม.ที่แล้ว'; return Math.floor(s/86400)+' วันที่แล้ว'; }
     </script>
 </body>
 </html>
